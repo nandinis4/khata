@@ -1,0 +1,100 @@
+{
+  "name": "builtin",
+  "version": "1.0.0",
+  "description": "Baseline categorisation for common Indian merchants and payment rails. Community contributions welcome: add a rule, add a fixture to the eval corpus, and the accuracy gate in CI will tell you whether it helped.",
+  "rules": [
+    {
+      "id": "income.salary",
+      "category": "income",
+      "priority": 10,
+      "match": { "merchant_contains": ["salary", "payroll", "sal cr"], "direction": "credit" },
+      "note": "Salary credits should never fall through to a generic transfer rule."
+    },
+    {
+      "id": "income.refund",
+      "category": "refund",
+      "priority": 9,
+      "match": { "merchant_contains": ["refund", "reversal", "cashback"], "direction": "credit" }
+    },
+    {
+      "id": "income.interest",
+      "category": "income",
+      "match": { "merchant_contains": ["interest", "int pd", "dividend"], "direction": "credit" }
+    },
+
+    { "id": "food.swiggy", "category": "food_delivery", "match": { "merchant_contains": ["swiggy"] } },
+    { "id": "food.zomato", "category": "food_delivery", "match": { "merchant_contains": ["zomato", "eternal"] } },
+    { "id": "food.eatclub", "category": "food_delivery", "match": { "merchant_contains": ["eatclub", "box8", "faasos", "behrouz", "ovenstory"] } },
+    { "id": "food.dominos", "category": "food_delivery", "match": { "merchant_contains": ["dominos", "pizzahut", "pizza hut", "mcdonald", "kfc", "burgerking", "burger king"] } },
+
+    { "id": "grocery.instamart", "category": "groceries", "priority": 5, "match": { "merchant_contains": ["instamart", "swiggyinstamart"] }, "note": "Must outrank food.swiggy: Instamart is groceries, not a restaurant order." },
+    { "id": "grocery.blinkit", "category": "groceries", "match": { "merchant_contains": ["blinkit", "grofers"] } },
+    { "id": "grocery.zepto", "category": "groceries", "match": { "merchant_contains": ["zepto"] } },
+    { "id": "grocery.bigbasket", "category": "groceries", "match": { "merchant_contains": ["bigbasket", "bbnow", "bb daily", "bbdaily"] } },
+    { "id": "grocery.dmart", "category": "groceries", "match": { "merchant_contains": ["dmart", "avenue supermart", "reliance fresh", "more retail", "spencers", "nature basket"] } },
+    { "id": "grocery.milk", "category": "groceries", "match": { "merchant_contains": ["country delight", "amul", "mother dairy", "milkbasket"] } },
+
+    { "id": "dining.cafe", "category": "dining", "match": { "merchant_contains": ["blue tokai", "third wave", "starbucks", "cafe coffee day", "ccd", "chaayos", "barista", "costa coffee"] } },
+    { "id": "dining.generic", "category": "dining", "match": { "merchant_regex": "\\b(restaurant|resto|kitchen|dhaba|biryani|bakery|brewery|bistro|eatery|food court)\\b" } },
+
+    { "id": "transport.uber", "category": "transport", "match": { "merchant_contains": ["uber"] } },
+    { "id": "transport.ola", "category": "transport", "match": { "merchant_contains": ["olacabs", "ola cabs", "ani technologies"] } },
+    { "id": "transport.rapido", "category": "transport", "match": { "merchant_contains": ["rapido", "namma yatri", "nammayatri", "blusmart"] } },
+    { "id": "transport.metro", "category": "transport", "match": { "merchant_contains": ["metro rail", "dmrc", "bmrcl", "onecard metro", "irctc", "redbus", "ksrtc", "msrtc"] } },
+    { "id": "transport.fuel", "category": "fuel", "match": { "merchant_regex": "\\b(indian ?oil|iocl|bharat ?petroleum|bpcl|hindustan ?petroleum|hpcl|shell|nayara|petrol|fuel station|filling station)\\b" } },
+    { "id": "transport.tolls", "category": "transport", "match": { "merchant_contains": ["fastag", "nhai", "paytm fastag", "toll plaza"] } },
+    { "id": "transport.parking", "category": "transport", "match": { "merchant_contains": ["parking", "park+"] } },
+
+    { "id": "shopping.amazon", "category": "shopping", "match": { "merchant_contains": ["amazon", "amzn"] } },
+    { "id": "shopping.flipkart", "category": "shopping", "match": { "merchant_contains": ["flipkart", "myntra", "ajio", "meesho", "snapdeal"] } },
+    { "id": "shopping.fashion", "category": "shopping", "match": { "merchant_contains": ["nykaa", "zara", "h and m", "hnm", "uniqlo", "westside", "lifestyle", "shoppers stop", "decathlon"] } },
+    { "id": "shopping.electronics", "category": "shopping", "match": { "merchant_contains": ["croma", "reliance digital", "vijay sales", "apple store", "boat lifestyle"] } },
+    { "id": "shopping.home", "category": "shopping", "match": { "merchant_contains": ["ikea", "pepperfry", "urban ladder", "homecentre", "home centre"] } },
+
+    { "id": "subs.streaming", "category": "subscriptions", "match": { "merchant_contains": ["netflix", "spotify", "prime video", "hotstar", "jiocinema", "jiohotstar", "sonyliv", "zee5", "youtube premium", "apple music", "audible"] } },
+    { "id": "subs.software", "category": "subscriptions", "match": { "merchant_contains": ["google one", "icloud", "dropbox", "notion", "figma", "github", "openai", "anthropic", "adobe", "microsoft 365", "jetbrains"] } },
+    { "id": "subs.gym", "category": "health", "match": { "merchant_contains": ["cult fit", "cultfit", "curefit", "gold gym", "goldsgym", "anytime fitness"] } },
+
+    { "id": "utilities.telecom", "category": "utilities", "match": { "merchant_contains": ["airtel", "jio", "vodafone", "vi recharge", "bsnl", "act fibernet", "hathway", "excitel", "tata play", "d2h"] } },
+    { "id": "utilities.power", "category": "utilities", "match": { "merchant_regex": "\\b(electricity|power|discom|bescom|mseb|bses|tneb|kseb|torrent power|adani electricity)\\b" } },
+    { "id": "utilities.gas_water", "category": "utilities", "match": { "merchant_contains": ["indane", "hp gas", "bharatgas", "mahanagar gas", "igl", "water board", "jal board"] } },
+    { "id": "utilities.bill_aggregator", "category": "utilities", "match": { "merchant_contains": ["bbps", "bharat billpay"] } },
+
+    { "id": "housing.rent", "category": "rent", "priority": 6, "match": { "merchant_contains": ["rent", "nobroker", "rentpay", "housing.com", "cred rent"], "direction": "debit" } },
+    { "id": "housing.maintenance", "category": "rent", "match": { "merchant_contains": ["society maintenance", "mygate", "apnacomplex", "adda"] } },
+
+    { "id": "health.pharmacy", "category": "health", "match": { "merchant_contains": ["apollo pharmacy", "1mg", "tata 1mg", "pharmeasy", "netmeds", "wellness forever", "medplus"] } },
+    { "id": "health.clinic", "category": "health", "match": { "merchant_regex": "\\b(hospital|clinic|diagnostic|pathlab|path lab|dr lal|srl|thyrocare|practo|apollo 24)\\b" } },
+
+    { "id": "finance.investments", "category": "investments", "priority": 7, "match": { "merchant_contains": ["zerodha", "groww", "upstox", "kuvera", "coin dcx", "indmoney", "smallcase", "nps trust", "ppf", "sip", "mutual fund", "mf utilities"] } },
+    { "id": "finance.insurance", "category": "insurance", "match": { "merchant_contains": ["lic", "hdfc life", "icici pru", "policybazaar", "acko", "star health", "digit insurance", "max life", "tata aig"] } },
+    { "id": "finance.creditcard_bill", "category": "credit_card_payment", "priority": 8, "match": { "merchant_contains": ["cred", "credit card payment", "card payment", "billdesk cc"], "direction": "debit" } },
+    { "id": "finance.loan_emi", "category": "loan_emi", "priority": 7, "match": { "merchant_regex": "\\b(emi|loan|nach|ecs|bajaj finserv|hdb financial)\\b", "direction": "debit" } },
+    { "id": "finance.charges", "category": "fees", "match": { "merchant_regex": "\\b(charges?|gst|fee|penalty|annual maintenance|amc|sms alert)\\b" } },
+
+    { "id": "travel.flights", "category": "travel", "match": { "merchant_contains": ["makemytrip", "goibibo", "cleartrip", "yatra", "indigo", "air india", "vistara", "akasa", "ixigo", "easemytrip"] } },
+    { "id": "travel.stays", "category": "travel", "match": { "merchant_contains": ["oyo", "airbnb", "booking.com", "agoda", "treebo", "fabhotels", "marriott", "taj hotels"] } },
+
+    { "id": "entertainment.tickets", "category": "entertainment", "match": { "merchant_contains": ["bookmyshow", "pvr", "inox", "cinepolis", "district"] } },
+    { "id": "entertainment.gaming", "category": "entertainment", "match": { "merchant_contains": ["steam", "playstation", "xbox", "epic games", "nintendo"] } },
+
+    { "id": "education.platforms", "category": "education", "match": { "merchant_contains": ["coursera", "udemy", "unacademy", "byju", "vedantu", "upgrad", "scaler", "interviewbit", "leetcode", "educative"] } },
+
+    { "id": "cash.atm", "category": "cash", "priority": 6, "match": { "channel": ["atm"] } },
+
+    {
+      "id": "transfer.self_p2p",
+      "category": "transfers",
+      "priority": -1,
+      "match": { "channel": ["imps", "neft"], "direction": "debit" },
+      "note": "Negative priority marks a fallback: any named merchant rule must win over it. This only catches bank-to-bank movement with no recognisable counterparty."
+    },
+    {
+      "id": "transfer.upi_person",
+      "category": "transfers",
+      "priority": -1,
+      "match": { "merchant_regex": "^[a-z]+ ?[a-z]*$", "channel": ["upi"], "amount_max_minor": 500000 },
+      "note": "Small UPI payments to a bare one- or two-word handle are usually a person, not a business. Deliberately weak: any merchant rule outranks it."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">khata</string>
+    <string name="notification_listener_label">khata transaction capture</string>
+
+    <string name="channel_review">Needs a decision</string>
+    <string name="channel_review_description">Asks what a transaction was when khata cannot tell. Tap an answer and it will not ask about that merchant again.</string>
+
+    <string name="channel_budget">Budget alerts</string>
+    <string name="channel_budget_description">Fires once when spending in a category passes 50%, 80% and 100% of its monthly limit.</string>
+
+    <string name="review_prompt">What was this?</string>
+</resources>

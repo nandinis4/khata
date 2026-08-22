@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      There is deliberately no <uses-permission android:name="android.permission.INTERNET" />
+      in this file, and there never will be.
+
+      Without that permission the Android runtime refuses every socket this
+      process tries to open. That turns "khata does not send your transactions
+      anywhere" from a claim you have to take on trust into something the
+      operating system enforces, and something anyone can verify in seconds by
+      reading this manifest or running `aapt dump permissions` on the APK.
+
+      A pull request that adds it is not a feature, it is a change to what this
+      app is, and it should be treated that way in review.
+    -->
+
+    <!--
+      Reading bank SMS is optional. The notification listener covers most modern
+      banks and payment apps; SMS is the fallback for issuers that still only
+      send text. The app works fine if the user declines.
+
+      RECEIVE_SMS only, deliberately. READ_SMS would grant access to the entire
+      SMS inbox, and khata has no reason to want that: it only ever handles the
+      broadcast for a message arriving right now.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
+    <!-- Posting the "what was this?" prompt and budget alerts. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".KhataApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Khata"
+        tools:targetApi="34">
+
+        <!--
+          allowBackup is false and the extraction rules block everything.
+          Android's default backup would copy the app's private files to the
+          user's Google Drive, which would move the entire ledger off the device
+          through a path the user never chose. Export is a deliberate action in
+          this app, not a background sync.
+        -->
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          The capture surface. Android delivers every posted notification here,
+          which is a lot of trust to hand an app; the filtering in
+          NotificationCapture.kt is what keeps khata from looking at messages
+          that are none of its business.
+        -->
+        <service
+            android:name=".capture.NotificationCapture"
+            android:exported="true"
+            android:label="@string/notification_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".capture.SmsCapture"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="500">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Handles the category buttons on a review notification, so a
+             transaction can be filed from the shade without opening the app. -->
+        <receiver
+            android:name=".notify.CategoryActionReceiver"
+            android:exported="false" />
+
+    </application>
+</manifest>

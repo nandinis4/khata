@@ -1,0 +1,50 @@
+# Synthetic bank and payment-app messages for trying khata out.
+#
+# Every line here is invented: the amounts, merchants, account tails and
+# reference numbers are made up, and no real message from anyone's phone is
+# included. They reproduce the message *shapes* issued by major Indian banks
+# and payment apps, which is what the parser actually keys on.
+#
+# Try it:  go run ./cmd/khata -ledger /tmp/demo.jsonl import testdata/sample_messages.txt
+#          go run ./cmd/khata -ledger /tmp/demo.jsonl month
+#
+# Lines beginning with # are ignored.
+
+# --- real transactions, various issuers and rails -------------------------
+Sent Rs.150.00 From HDFC Bank A/C x4412 To SWIGGY On 02/08/25 Ref 522345678901 Not You? Call 18002586161
+Rs.450.00 debited from a/c XXXXXX4412 on 03-08-25 to VPA zepto@ybl (UPI Ref no 522345678902)
+ICICI Bank Acct XX4412 debited for Rs 1,299.00 on 04-Aug-25; AMAZON credited. UPI:522345678903. Call 18002662 for dispute.
+Dear UPI user A/C X4412 debited by 240.0 on date 05Aug25 trf to BLINKIT Refno 522345678904. If not u? call 1800111109. -SBI
+Spent Card no. XX5678 INR 2450.00 06-08-25 12:30:45 BIGBASKET Avl Lmt INR 47550.00
+Alert: You've spent Rs.899.00 via Debit Card xx4412 at UBER INDIA on 2025-08-07:19:22:11. Avl bal: Rs.23,110.42
+Rs 5000.00 withdrawn from A/c XX4412 at ATM on 08-08-25. Avl Bal Rs 18110.42
+Rs.199.00 debited from a/c XX4412 on 09-08-25 to VPA netflix@icici (UPI Ref no 522345678905)
+Rs.2,750.00 debited from a/c XX4412 on 10-08-25 to VPA bescom@sbi (UPI Ref no 522345678906)
+Sent Rs.480.00 From HDFC Bank A/C x4412 To RAZ*BLUE TOKAI COFFEE BLR On 11/08/25 Ref 522345678907
+Rs.6,500.00 debited from a/c XX4412 on 12-08-25 to VPA zerodha@hdfcbank (UPI Ref no 522345678908)
+Rs.1,240.00 debited from a/c XX4412 on 13-08-25 to VPA apollopharmacy@axl (UPI Ref no 522345678909)
+Spent Card no. XX5678 INR 3,299.00 14-08-25 20:11:05 BOOKMYSHOW Avl Lmt INR 44251.00
+Rs.720.00 debited from a/c XX4412 on 15-08-25 to VPA swiggyinstamart@ybl (UPI Ref no 522345678910)
+Sent Rs.310.00 From HDFC Bank A/C x4412 To RAPIDO On 16/08/25 Ref 522345678911
+Rs.18,000.00 debited from a/c XX4412 on 01-08-25 to VPA nobroker@paytm (UPI Ref no 522345678912)
+Rs.1,150.00 debited from a/c XX4412 on 17-08-25 to VPA airtel@icici (UPI Ref no 522345678913)
+Rs.640.00 debited from a/c XX4412 on 18-08-25 to VPA QZXW TRADERS 8891 (UPI Ref no 522345678914)
+
+# --- credits ---------------------------------------------------------------
+Dear Customer, Acct XX4412 is credited with Rs 1,85,000.00 on 01-Aug-25 from SALARY. Avl Bal Rs 2,03,110.42
+Rs.1,299.00 has been reversed and credited to your Card xx5678 by AMAZON on 19-08-25.
+
+# --- the same payment reported twice: bank SMS then app push ---------------
+# Both carry reference 522345678915, so the ledger should keep exactly one.
+Rs.250.00 debited from a/c XX4412 on 20-08-25 to VPA bluetokai@icici (UPI Ref no 522345678915)
+Rs.250.00 paid to Blue Tokai Coffee using ICICI Bank ****4412 UPI Ref no 522345678915
+
+# --- messages that must NOT be booked --------------------------------------
+# Each of these carries an amount and would corrupt a budget if mishandled.
+123456 is the OTP for txn of Rs 2,500.00 at AMAZON on card xx5678. Valid for 10 min. Do not share with anyone.
+Use OTP 884213 to authorise payment of Rs 4,999 to FLIPKART. Never share this code.
+Your A/c XX4412 Avl Bal is Rs 18,110.42 as on 20-08-25. -TESTBK
+Your txn of Rs 500.00 at SWIGGY on card xx5678 has been declined due to insufficient balance.
+Your UPI Autopay mandate of Rs 199.00 for NETFLIX will be debited on 25-08-25 from A/c XX4412.
+RAHUL has requested Rs 800.00 via UPI. Approve in your app before 20-08-25 21:00.
+Congratulations! You are pre-approved for a personal loan up to Rs 5,00,000 at 10.5% p.a. Apply now. T&C apply.

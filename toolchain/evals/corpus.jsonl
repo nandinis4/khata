@@ -1,0 +1,77 @@
+# khata parser evaluation corpus.
+#
+# Every message here is synthetic. The amounts, merchants, account tails and
+# reference numbers are invented; what is faithful is the *shape* of each
+# message, which is what the parser keys on.
+#
+# Run:  python -m khata_tools.cli eval
+#
+# Adding a case is the preferred way to report a parser bug: write the message
+# and the result you expected, watch it fail, then fix the parser.
+
+# --- UPI debits, by issuer -------------------------------------------------
+{"id": "hdfc.upi.sent", "text": "Sent Rs.150.00 From HDFC Bank A/C x4412 To SWIGGY On 12/08/25 Ref 522345678901 Not You? Call 18002586161", "expect": {"bookable": true, "kind": "transaction", "amount_minor": 15000, "direction": "debit", "merchant_key": "swiggy", "account_hint": "XX4412", "reference": "522345678901", "category": "food_delivery"}}
+{"id": "hdfc.upi.vpa", "text": "Rs.450.00 debited from a/c XXXXXX4412 on 12-08-25 to VPA zepto@ybl (UPI Ref no 522345678902)", "expect": {"bookable": true, "amount_minor": 45000, "direction": "debit", "channel": "upi", "merchant_key": "zepto", "account_hint": "XX4412", "category": "groceries"}}
+{"id": "icici.upi.counterparty_credited", "text": "ICICI Bank Acct XX4412 debited for Rs 1,299.00 on 12-Aug-25; AMAZON credited. UPI:522345678903. Call 18002662 for dispute.", "expect": {"bookable": true, "amount_minor": 129900, "direction": "debit", "merchant_key": "amazon", "reference": "522345678903", "category": "shopping"}, "note": "Both debited and credited appear; the first verb describes the user's own account."}
+{"id": "sbi.upi.bare_amount", "text": "Dear UPI user A/C X4412 debited by 240.0 on date 12Aug25 trf to BLINKIT Refno 522345678904. If not u? call 1800111109. -SBI", "expect": {"bookable": true, "amount_minor": 24000, "direction": "debit", "merchant_key": "blinkit", "category": "groceries"}, "note": "No currency token at all."}
+{"id": "axis.upi.autopay_executed", "text": "Rs.199.00 debited from a/c XX4412 on 15-08-25 to VPA netflix@icici (UPI Ref no 522345678905)", "expect": {"bookable": true, "amount_minor": 19900, "direction": "debit", "merchant_key": "netflix", "category": "subscriptions"}}
+{"id": "upi.unspaced_handle", "text": "Rs.480.00 debited from a/c XX4412 on 11-08-25 to VPA bluetokai@icici (UPI Ref no 522345678907)", "expect": {"bookable": true, "amount_minor": 48000, "merchant_key": "bluetokai", "category": "dining"}, "note": "Unspaced VPA handle must match the spaced rule for Blue Tokai."}
+
+# --- card and ATM ----------------------------------------------------------
+{"id": "axis.card.avl_limit", "text": "Spent Card no. XX5678 INR 2450.00 12-08-25 12:30:45 BIGBASKET Avl Lmt INR 47550.00", "expect": {"bookable": true, "amount_minor": 245000, "direction": "debit", "channel": "card", "merchant_key": "bigbasket", "account_hint": "XX5678", "category": "groceries"}, "note": "Two amounts; the available limit must not be booked."}
+{"id": "hdfc.card.avl_bal", "text": "Alert: You've spent Rs.899.00 via Debit Card xx4412 at UBER INDIA on 2025-08-12:19:22:11. Avl bal: Rs.23,110.42", "expect": {"bookable": true, "amount_minor": 89900, "direction": "debit", "channel": "card", "merchant_key": "uber", "category": "transport"}}
+{"id": "atm.withdrawal", "text": "Rs 5000.00 withdrawn from A/c XX4412 at ATM on 12-08-25. Avl Bal Rs 18110.42", "expect": {"bookable": true, "amount_minor": 500000, "direction": "debit", "channel": "atm", "category": "cash"}}
+{"id": "card.pos_with_bracket", "text": "Spent Card no. XX5678 INR 500.00 18-08-25 12:00:00 at CROMA (STORE 42) Avl Lmt INR 4000.00", "expect": {"bookable": true, "amount_minor": 50000, "merchant_key": "croma", "category": "shopping"}, "note": "Bracketed store id must not leak into the merchant name."}
+
+# --- credits ---------------------------------------------------------------
+{"id": "credit.salary", "text": "Dear Customer, Acct XX4412 is credited with Rs 1,85,000.00 on 01-Aug-25 from SALARY. Avl Bal Rs 2,03,110.42", "expect": {"bookable": true, "amount_minor": 18500000, "direction": "credit", "merchant_key": "salary", "category": "income"}, "note": "Lakh-grouped amount alongside a balance."}
+{"id": "credit.imps_inbound", "text": "Your a/c no. XXXXXXXX4412 is credited by Rs.8,500.00 on 01-08-25 by a/c linked to mobile 9XXXXXX210 (IMPS Ref no 521312345678)", "expect": {"bookable": true, "amount_minor": 850000, "direction": "credit", "channel": "imps", "reference": "521312345678"}}
+{"id": "credit.refund_reversal", "text": "Rs.1,299.00 has been reversed and credited to your Card xx5678 by AMAZON on 14-08-25.", "expect": {"bookable": true, "amount_minor": 129900, "direction": "credit", "merchant_key": "amazon"}, "note": "A reversal is a credit, not a failed transaction. The comma inside the amount must not be read as a clause boundary."}
+
+# --- merchant coverage across categories -----------------------------------
+{"id": "cat.rent", "text": "Rs.18,000.00 debited from a/c XX4412 on 01-08-25 to VPA nobroker@paytm (UPI Ref no 522345678912)", "expect": {"bookable": true, "amount_minor": 1800000, "category": "rent"}}
+{"id": "cat.utilities.telecom", "text": "Rs.1,150.00 debited from a/c XX4412 on 17-08-25 to VPA airtel@icici (UPI Ref no 522345678913)", "expect": {"bookable": true, "category": "utilities"}}
+{"id": "cat.utilities.power", "text": "Rs.2,750.00 debited from a/c XX4412 on 10-08-25 to VPA bescom@sbi (UPI Ref no 522345678906)", "expect": {"bookable": true, "category": "utilities"}}
+{"id": "cat.investments", "text": "Rs.6,500.00 debited from a/c XX4412 on 12-08-25 to VPA zerodha@hdfcbank (UPI Ref no 522345678908)", "expect": {"bookable": true, "category": "investments"}}
+{"id": "cat.health", "text": "Rs.1,240.00 debited from a/c XX4412 on 13-08-25 to VPA apollopharmacy@axl (UPI Ref no 522345678909)", "expect": {"bookable": true, "category": "health"}}
+{"id": "cat.entertainment", "text": "Spent Card no. XX5678 INR 3,299.00 14-08-25 20:11:05 BOOKMYSHOW Avl Lmt INR 44251.00", "expect": {"bookable": true, "category": "entertainment"}}
+{"id": "cat.transport.rapido", "text": "Sent Rs.310.00 From HDFC Bank A/C x4412 To RAPIDO On 16/08/25 Ref 522345678911", "expect": {"bookable": true, "category": "transport"}}
+{"id": "cat.groceries.instamart", "text": "Rs.720.00 debited from a/c XX4412 on 15-08-25 to VPA swiggyinstamart@ybl (UPI Ref no 522345678910)", "expect": {"bookable": true, "category": "groceries"}, "note": "Instamart is Swiggy-operated but is groceries, not a restaurant order."}
+{"id": "cat.travel", "text": "Spent Card no. XX5678 INR 8,940.00 09-08-25 08:15:00 INDIGO AIRLINES Avl Lmt INR 38610.00", "expect": {"bookable": true, "category": "travel"}}
+{"id": "cat.education", "text": "Rs.3,500.00 debited from a/c XX4412 on 08-08-25 to VPA coursera@icici (UPI Ref no 522345678920)", "expect": {"bookable": true, "category": "education"}}
+{"id": "cat.fuel", "text": "Spent Card no. XX5678 INR 2,000.00 07-08-25 09:00:00 INDIAN OIL PETROL PUMP Avl Lmt INR 45000.00", "expect": {"bookable": true, "category": "fuel"}}
+{"id": "cat.insurance", "text": "Rs.12,400.00 debited from a/c XX4412 on 06-08-25 to VPA hdfclife@hdfcbank (UPI Ref no 522345678921)", "expect": {"bookable": true, "category": "insurance"}}
+
+# --- must NOT be booked ----------------------------------------------------
+# Each of these carries an amount. Booking any of them corrupts a budget.
+{"id": "reject.otp.leading_code", "text": "123456 is the OTP for txn of Rs 2,500.00 at AMAZON on card xx5678. Valid for 10 min. Do not share with anyone.", "expect": {"bookable": false, "kind": "otp"}}
+{"id": "reject.otp.trailing_code", "text": "Use OTP 884213 to authorise payment of Rs 4,999 to FLIPKART. Never share this code.", "expect": {"bookable": false, "kind": "otp"}}
+{"id": "reject.otp.colon_form", "text": "Your one time password is: 553311 for a transaction of Rs 1,200 on card xx4412.", "expect": {"bookable": false, "kind": "otp"}}
+{"id": "reject.balance", "text": "Your A/c XX4412 Avl Bal is Rs 18,110.42 as on 12-08-25. -TESTBK", "expect": {"bookable": false, "kind": "balance"}}
+{"id": "reject.declined.insufficient", "text": "Your txn of Rs 500.00 at SWIGGY on card xx5678 has been declined due to insufficient balance.", "expect": {"bookable": false, "kind": "declined"}}
+{"id": "reject.declined.failed", "text": "Your payment of Rs 2,300.00 to BIGBASKET has failed. The amount, if debited, will be refunded in 3 days.", "expect": {"bookable": false, "kind": "declined"}}
+{"id": "reject.mandate.future", "text": "Your UPI Autopay mandate of Rs 199.00 for NETFLIX will be debited on 15-08-25 from A/c XX4412.", "expect": {"bookable": false, "kind": "mandate_notice"}}
+{"id": "reject.mandate.emi_due", "text": "Your EMI of Rs 8,450.00 is due on 05-09-25 for loan account LN889912. Please maintain sufficient balance.", "expect": {"bookable": false, "kind": "mandate_notice"}}
+{"id": "reject.collect_request", "text": "RAHUL has requested Rs 800.00 via UPI. Approve in your app before 12-08-25 21:00.", "expect": {"bookable": false, "kind": "collect_request"}}
+{"id": "reject.promo.loan", "text": "Congratulations! You are pre-approved for a personal loan up to Rs 5,00,000 at 10.5% p.a. Apply now. T&C apply.", "expect": {"bookable": false, "kind": "promotional"}}
+{"id": "reject.promo.cashback_offer", "text": "Get 10% cashback up to Rs 500 on your next order. Offer valid till 31-08-25. Click here to know more.", "expect": {"bookable": false, "kind": "promotional"}}
+{"id": "reject.unrelated", "text": "Your parcel with tracking id 8891234 will be delivered today between 4 and 6 PM.", "expect": {"bookable": false}}
+
+# --- edge cases the parser has to survive ----------------------------------
+{"id": "edge.paise_precision", "text": "Rs.0.99 debited from a/c XX4412 on 12-08-25 to VPA test@ybl (UPI Ref no 522345678930)", "expect": {"bookable": true, "amount_minor": 99, "direction": "debit"}}
+{"id": "edge.lakh_grouping", "text": "Rs.2,50,000.00 debited from a/c XX4412 on 12-08-25 to VPA builder@icici (UPI Ref no 522345678931)", "expect": {"bookable": true, "amount_minor": 25000000, "direction": "debit"}}
+{"id": "edge.notification_style", "text": "Rs.250.00 paid to Blue Tokai Coffee using ICICI Bank ****4412 UPI Ref no 522300112233", "expect": {"bookable": true, "amount_minor": 25000, "direction": "debit", "reference": "522300112233", "category": "dining"}, "note": "Payment-app push rather than a bank SMS."}
+{"id": "edge.no_merchant", "text": "Rs 200.00 debited from your account on 12-08-25.", "expect": {"bookable": true, "amount_minor": 20000, "direction": "debit", "merchant_key": ""}, "note": "Bookable but uncategorisable; should be flagged for review."}
+{"id": "edge.balance_before_amount", "text": "Avl Bal Rs 18,110.42. Rs.450.00 debited from a/c XX4412 on 12-08-25 to VPA zepto@ybl (UPI Ref no 522345678932)", "expect": {"bookable": true, "amount_minor": 45000}, "note": "Balance quoted first; the spend still has to win."}
+
+# --- adversarial cases -----------------------------------------------------
+# Written against the parser rather than for it: message shapes that are real
+# but that the extraction heuristics were not tuned on.
+{"id": "hard.multiline_notification", "text": "Payment successful ₹1,499 to Croma Electronics Debited from HDFC Bank Account XX4412 Transaction ID T2508191122334455", "expect": {"bookable": true, "amount_minor": 149900, "direction": "debit", "merchant_key": "croma electronics", "category": "shopping"}}
+{"id": "hard.two_amounts_no_balance_word", "text": "Rs.320.00 debited from a/c XX4412 on 19-08-25 to VPA zomato@ybl. Cashback of Rs.32.00 will be credited within 7 days. Ref 522345678940", "expect": {"bookable": true, "amount_minor": 32000, "direction": "debit", "merchant_key": "zomato", "category": "food_delivery"}, "note": "A second amount with a credit verb attached, but no balance keyword to demote it."}
+{"id": "hard.merchant_with_digits", "text": "Spent Card no. XX5678 INR 640.00 19-08-25 14:02:11 CAFE 1730 KORAMANGALA Avl Lmt INR 40000.00", "expect": {"bookable": true, "amount_minor": 64000, "direction": "debit"}, "note": "The merchant name legitimately contains a number."}
+{"id": "hard.negative_phrasing", "text": "An amount of INR 2,100.00 has been debited from your account XX4412 towards DECATHLON SPORTS on 19-08-25.", "expect": {"bookable": true, "amount_minor": 210000, "direction": "debit", "merchant_key": "decathlon sports", "category": "shopping"}, "note": "'towards' rather than to/at."}
+{"id": "hard.otp_without_the_word_code", "text": "756431 is your verification PIN for the transaction of Rs 900 at MYNTRA. Valid 5 minutes.", "expect": {"bookable": false}, "note": "OTP message that never says OTP."}
+{"id": "hard.partial_refund", "text": "A partial refund of Rs.450.00 for order 4471 has been credited to your a/c XX4412 by SWIGGY on 19-08-25.", "expect": {"bookable": true, "amount_minor": 45000, "direction": "credit", "merchant_key": "swiggy"}}
+{"id": "hard.foreign_currency", "text": "Spent Card no. XX5678 USD 12.99 19-08-25 03:11:00 OPENAI Avl Lmt INR 39000.00", "expect": {"bookable": true}, "note": "A foreign-currency charge. khata assumes INR, so the amount will be wrong; this case exists to document the gap."}
+{"id": "hard.emi_conversion_offer", "text": "Your transaction of Rs 45,000.00 at CROMA is eligible for conversion to EMI. Reply YES to convert.", "expect": {"bookable": false}, "note": "Describes a transaction that already happened elsewhere; booking it would double-count."}

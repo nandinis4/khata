@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "khata-tools"
+version = "0.1.0"
+description = "Offline tooling for khata: parser evaluation, rule-pack synthesis, and monthly reports"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = []
+
+# Everything the toolchain needs to run in CI is in the standard library.
+# Provider extras are opt-in precisely because they are the only parts that can
+# talk to a network.
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+khata-tools = "khata_tools.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["khata_tools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

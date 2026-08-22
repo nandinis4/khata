@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DayNight so a dark-mode launch does not flash a white window before
+     Compose applies the real colour scheme. -->
+    <style name="Theme.Khata" parent="android:Theme.DeviceDefault.DayNight" >
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>
