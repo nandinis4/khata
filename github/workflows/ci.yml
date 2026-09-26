@@ -1,0 +1,186 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # required by the "latest" prerelease step
+
+jobs:
+  # ---------------------------------------------------------------- Go engine
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false            # nothing to key a cache on: there is no go.sum
+
+      - name: assert zero third-party dependencies
+        run: |
+          if [ -s go.sum ]; then
+            echo "go.sum is non-empty — a third-party dependency entered the engine."
+            cat go.sum
+            exit 1
+          fi
+          echo "OK: no go.sum"
+
+      - name: vet
+        run: go vet ./...
+
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: test
+        run: go test ./...
+
+      - name: test -race
+        run: go test -race ./...
+
+      - name: build CLI
+        run: go build -o khata ./cmd/khata
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: khata-cli-linux-amd64
+          path: khata
+
+  # --------------------------------------------------------- Python toolchain
+  python:
+    runs-on: ubuntu-latest
+    needs: go
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+
+      - name: install toolchain (stdlib only + pytest)
+        run: pip install -e './toolchain[dev]'
+
+      - name: pytest
+        working-directory: toolchain
+        run: python -m pytest -q
+
+      - name: parser eval against the labelled corpus
+        run: |
+          go build -o khata ./cmd/khata
+          cd toolchain
+          python -m khata_tools.cli eval --binary ../khata --min-accuracy 0.95
+
+  # ------------------------------------------------------------------ Android
+  android:
+    runs-on: ubuntu-latest
+    needs: [ go, python ]
+    env:
+      NDK_VERSION: '27.2.12479018'
+      BUILD_TOOLS: '35.0.0'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+
+      - uses: android-actions/setup-android@v3
+
+      - name: install NDK / platform / build-tools
+        run: |
+          sdkmanager --install \
+            "ndk;${NDK_VERSION}" \
+            "platforms;android-35" \
+            "build-tools;${BUILD_TOOLS}"
+
+      # gomobile bind requires golang.org/x/mobile in the module graph, which
+      # would create a go.sum and break the zero-dependency guarantee the `go`
+      # job asserts. So the bind runs against a scratch copy of the tree; the
+      # committed go.mod/go.sum are never touched.
+      - name: gomobile bind (scratch module)
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
+        run: |
+          set -euxo pipefail
+          scratch="$RUNNER_TEMP/bindsrc"
+          rm -rf "$scratch"
+          cp -R "$GITHUB_WORKSPACE" "$scratch"
+          rm -rf "$scratch/.git"
+          cd "$scratch"
+          go get golang.org/x/mobile/bind@latest
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          "$(go env GOPATH)/bin/gomobile" init
+          mkdir -p "$GITHUB_WORKSPACE/android/app/libs"
+          "$(go env GOPATH)/bin/gomobile" bind \
+            -target=android \
+            -androidapi 26 \
+            -javapkg=dev.khata.engine \
+            -o "$GITHUB_WORKSPACE/android/app/libs/khata.aar" \
+            ./core/mobile
+
+      # -javapkg is a PREFIX; gomobile appends the Go package name, so package
+      # `mobile` under -javapkg=dev.khata.engine lands at dev.khata.engine.mobile.
+      # Engine.kt imports exactly that. Print the truth before Kotlin compiles,
+      # so a mismatch shows up here instead of as an unresolved-reference error.
+      - name: show generated Java package
+        run: |
+          mkdir -p /tmp/aar && unzip -o -q android/app/libs/khata.aar -d /tmp/aar
+          unzip -l /tmp/aar/classes.jar | grep -E 'dev/khata/engine' | head -40
+
+      - name: generate gradle wrapper
+        run: cd android && gradle wrapper --gradle-version 8.11.1
+
+      - name: assembleDebug
+        run: cd android && ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: assert the APK cannot reach the network
+        run: |
+          set -euo pipefail
+          apk=$(find android/app/build/outputs/apk/debug -name '*.apk' | head -n1)
+          echo "APK: $apk"
+          aapt="$ANDROID_SDK_ROOT/build-tools/${BUILD_TOOLS}/aapt"
+          "$aapt" dump permissions "$apk" | tee /tmp/perms.txt
+          if grep -q 'android.permission.INTERNET' /tmp/perms.txt; then
+            echo "FAIL: the APK declares INTERNET."
+            exit 1
+          fi
+          echo "OK: no INTERNET permission."
+          cp "$apk" khata-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: khata-debug-apk
+          path: khata-debug.apk
+
+      # Actions artifacts are zipped and login-gated, which makes them useless
+      # from a phone. A moving prerelease gives a stable, tappable .apk URL.
+      - name: publish moving 'latest' prerelease
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          sleep 3
+          gh release create latest khata-debug.apk \
+            --prerelease \
+            --title "khata latest (debug)" \
+            --notes "Debug APK from ${GITHUB_SHA}. No INTERNET permission — asserted in CI."
