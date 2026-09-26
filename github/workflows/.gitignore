@@ -1,0 +1,34 @@
+# --- build artifacts --------------------------------------------------------
+/khata
+/dist/
+*.aar
+android/app/libs/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/gradle/wrapper/gradle-wrapper.jar
+
+# --- Go ---------------------------------------------------------------------
+# The engine has no third-party dependencies and a test asserts go.sum is
+# absent. A local `gomobile bind` will try to create one; keep it out of git.
+go.sum
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# --- runtime ----------------------------------------------------------------
+*.jsonl
+!testdata/**/*.jsonl
+!toolchain/**/*.jsonl
+
+# --- macOS / editors --------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
